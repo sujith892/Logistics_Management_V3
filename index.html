@@ -17,6 +17,11 @@
   --font:'Rajdhani',sans-serif;--mono:'JetBrains Mono',monospace;
   --radius:12px;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
 }
+[data-theme="light"]{--bg:#f0f4f8;--surface:#fff;--card:#fff;--border:#d1e0f0;--accent:#0077cc;--text:#0a1a2e;--muted:#6b8aaa;--green:#00a854;--red:#e02020;}
+[data-theme="light"] .admin-table td{color:#0a1a2e;}
+[data-theme="light"] .admin-table td.td-white-bold,[data-theme="light"] .admin-table td.td-white{color:#0a1a2e !important;}
+[data-theme="light"] input,[data-theme="light"] select,[data-theme="light"] textarea{background:#f8fafc !important;color:#0a1a2e !important;}
+*,*::before,*::after{transition:background-color 0.25s,border-color 0.2s,color 0.1s;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow:hidden;}
 
 /* GRID BG */
@@ -660,10 +665,16 @@ body.admin-mode #toast {
 .admin-table-wrap {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--card);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
+.admin-table-wrap::-webkit-scrollbar { height: 5px; }
+.admin-table-wrap::-webkit-scrollbar-track { background: transparent; }
+.admin-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
 .admin-table {
   width: 100%;
   table-layout: fixed;
@@ -724,6 +735,14 @@ body.admin-mode #toast {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.admin-table td.td-white-bold {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+.admin-table td.td-white {
+  color: #ffffff !important;
+  font-weight: 400;
 }
 .admin-table td.td-id {
   font-family: var(--mono);
@@ -809,6 +828,22 @@ body.admin-mode #toast {
   outline:none;cursor:pointer;
 }
 .df-date-input:focus,.df-date-input.active{border-color:var(--accent);color:var(--accent);}
+
+/* ── CHECK IN / OUT ── */
+.btn-checkin{width:100%;padding:10px 0;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#007a3d,#00cc66);color:#fff;
+  font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;
+  letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;}
+.btn-checkin:active{transform:scale(.97);}.btn-checkin:disabled{opacity:.55;cursor:not-allowed;}
+.btn-checkout{width:100%;padding:10px 0;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#b33000,#ff5500);color:#fff;
+  font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;
+  letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;}
+.btn-checkout:active{transform:scale(.97);}.btn-checkout:disabled{opacity:.55;cursor:not-allowed;}
+.ci-stamp{font-size:11px;color:var(--muted);text-align:center;padding:3px 0;letter-spacing:.3px;}
+.ci-stamp b{color:var(--green);}
+.co-stamp{font-size:11px;color:var(--muted);text-align:center;padding:3px 0;letter-spacing:.3px;}
+.co-stamp b{color:#ff6b35;}
 </style>
 </head>
 <body>
@@ -883,6 +918,9 @@ body.admin-mode #toast {
   <button class="tab admin-tab" onclick="showTab('archive');loadArchiveStats();" id="tab-archive">
     <span class="ti">🗄</span>Archive
   </button>
+  <button class="tab admin-tab" onclick="showTab('config');loadConfig();" id="tab-config">
+    <span class="ti">⚙</span>Config
+  </button>
 </div>
 
 <div class="screens">
@@ -929,6 +967,16 @@ body.admin-mode #toast {
 
   <!-- ── CREATE (admin) ── -->
   <div class="screen" id="screen-create">
+    <div id="manageEntitiesBar" style="display:none;margin-bottom:12px">
+      <button onclick="openEntityManager()"
+              style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+                     background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);
+                     border-radius:10px;padding:12px 16px;color:var(--accent);font-size:13px;
+                     font-weight:600;cursor:pointer;font-family:var(--font);letter-spacing:0.5px">
+        ⚙ Manage Dropdowns
+        <span style="opacity:.55;font-size:11px;font-weight:400">Entity / Account / Service</span>
+      </button>
+    </div>
     <div class="card">
       <div class="card-title">New Shipment</div>
       <div class="row2">
@@ -970,8 +1018,15 @@ body.admin-mode #toast {
           </select>
         </div>
       </div>
+      <div class="field"><label>Pickup Location</label>
+        <input type="text" id="c-pickup" placeholder="Pickup address or location"/>
+      </div>
+      <div class="field"><label>Notes</label>
+        <textarea id="c-notes" placeholder="Any additional notes…" style="resize:none;height:70px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;line-height:1.5"></textarea>
+      </div>
+      <br/>
+      <button class="btn btn-primary" id="createBtn" onclick="createShipment()"><span>Create Shipment</span></button>
     </div>
-    <button class="btn btn-primary" id="createBtn" onclick="createShipment()"><span>Create Shipment</span></button>
   </div>
 
   <!-- ── DRIVERS (admin) ── -->
@@ -1181,6 +1236,12 @@ body.admin-mode #toast {
         </select>
       </div>
     </div>
+    <div class="field"><label>Pickup Location</label>
+      <input type="text" id="e-PickupLocation" placeholder="Pickup address or location"/>
+    </div>
+    <div class="field"><label>Notes</label>
+      <textarea id="e-Notes" placeholder="Any additional notes…" style="resize:none;height:70px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;line-height:1.5"></textarea>
+    </div>
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeOverlay('editOverlay')">Cancel</button>
       <button class="btn btn-primary" style="flex:2" onclick="saveEdit()">Update</button>
@@ -1212,26 +1273,48 @@ body.admin-mode #toast {
 
     <!-- PHOTO UPLOAD -->
     <div class="field" style="margin-top:12px">
-      <label>📷 Upload Photo <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-      <div class="photo-upload-area" id="photoDropZone"
-           ondragover="photoDrag(event,true)" ondragleave="photoDrag(event,false)" ondrop="photoDrop(event)">
-        <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="photoSelected(this)"/>
-        <div class="photo-upload-ico">📸</div>
-        <div class="photo-upload-txt">Tap to take photo or <strong>choose from gallery</strong></div>
+      <label>📷 Photo <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional — auto-uploads on select)</span></label>
+
+      <!-- Hidden file inputs -->
+      <input type="file" id="photoInputCamera"  accept="image/*" capture="environment" style="display:none" onchange="photoChosen(this)"/>
+      <input type="file" id="photoInputGallery" accept="image/*" style="display:none" onchange="photoChosen(this)"/>
+
+      <!-- Source picker — shown when no photo selected -->
+      <div id="photoSourcePicker" style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn" onclick="document.getElementById('photoInputCamera').click()"
+                style="flex:1;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);
+                       color:var(--accent);font-size:13px;padding:12px 0;border-radius:10px;
+                       display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer">
+          📷 Camera
+        </button>
+        <button class="btn" onclick="document.getElementById('photoInputGallery').click()"
+                style="flex:1;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);
+                       color:var(--accent);font-size:13px;padding:12px 0;border-radius:10px;
+                       display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer">
+          🖼 Gallery
+        </button>
       </div>
-      <div class="photo-preview" id="photoPreview">
-        <div id="photoPreviewThumb" onclick="showPhotoPreview()"
-             style="display:none;padding:11px 14px;cursor:pointer;font-size:13px;
-                    font-weight:600;color:var(--accent);letter-spacing:0.3px;
-                    align-items:center;gap:8px;">
-          <span>👁</span><span id="photoPreviewLabel"></span>
+
+      <!-- Photo preview — shown after selection -->
+      <div id="photoPreviewBox" style="display:none;margin-top:8px;border-radius:10px;overflow:hidden;
+           border:1px solid rgba(0,212,255,.2);position:relative">
+        <img id="photoPreviewImg" src="" alt="preview"
+             style="width:100%;max-height:180px;object-fit:cover;display:block"/>
+        <div id="photoUploadOverlay" style="position:absolute;inset:0;background:rgba(6,13,20,.75);
+             display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+          <div id="photoUploadStatus" style="color:#00d4ff;font-size:13px;font-weight:600">⏳ Uploading…</div>
+          <div style="width:70%;background:rgba(255,255,255,.15);border-radius:999px;height:5px;overflow:hidden">
+            <div id="photoUploadBar" style="height:100%;background:#00d4ff;width:0%;transition:width .3s;border-radius:999px"></div>
+          </div>
         </div>
-        <img id="photoPreviewImg" src="" alt="preview" style="display:none;"/>
-        <button class="photo-preview-remove" onclick="removePhoto()">✕</button>
+        <button onclick="removePhoto()"
+                style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;
+                       color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;
+                       display:flex;align-items:center;justify-content:center">✕</button>
       </div>
-      <div class="upload-progress" id="uploadProgress">
-        <div class="upload-progress-bar" id="uploadProgressBar"></div>
-      </div>
+
+      <!-- Status text below preview -->
+      <div id="photoStatusText" style="font-size:11px;color:var(--muted);text-align:center;margin-top:5px"></div>
     </div>
 
     <div style="display:flex;gap:8px;margin-top:14px">
@@ -1240,19 +1323,140 @@ body.admin-mode #toast {
         <span>✔ Update Status</span>
       </button>
     </div>
-    <div style="margin-top:8px">
-      <button class="btn btn-primary" id="uploadPhotoBtn" onclick="uploadPhotoOnly()"
-              style="width:100%;background:linear-gradient(135deg,#005fa3,#00b8d9);opacity:.45;cursor:not-allowed" disabled>
-        <span>📷 Upload Photo</span>
-      </button>
-      <div id="uploadPhotoHint" style="font-size:11px;color:var(--muted);text-align:center;margin-top:5px">
-        Save status first, then upload photo
+  </div>
+</div>
+
+<!-- ── CONFIG SCREEN ── -->
+  <div class="screen" id="screen-config">
+    <div class="card">
+      <div class="card-title">⚙ Manage Config Values</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Add, edit or remove dropdown values used in shipment forms.</div>
+
+      <!-- Entity -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">🏢 Entity</div>
+        <div id="cfg-entity-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="cfg-entity-input" placeholder="New entity…" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none"/>
+          <button class="btn btn-primary" style="flex:0 0 auto;padding:0 16px" onclick="cfgAdd('entity')">+ Add</button>
+        </div>
       </div>
+
+      <!-- Account Name -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">🏦 Account Name</div>
+        <div id="cfg-account-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="cfg-account-input" placeholder="New account name…" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none"/>
+          <button class="btn btn-primary" style="flex:0 0 auto;padding:0 16px" onclick="cfgAdd('account')">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Service Type -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">🚚 Service Type</div>
+        <div id="cfg-service-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="cfg-service-input" placeholder="New service type…" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none"/>
+          <button class="btn btn-primary" style="flex:0 0 auto;padding:0 16px" onclick="cfgAdd('service')">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">🔖 Status Values</div>
+        <div id="cfg-status-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="cfg-status-input" placeholder="New status…" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none"/>
+          <button class="btn btn-primary" style="flex:0 0 auto;padding:0 16px" onclick="cfgAdd('status')">+ Add</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%" onclick="cfgSave()"><span>💾 Save All Changes</span></button>
+      <div id="cfgSaveStatus" style="font-size:12px;text-align:center;margin-top:8px;color:var(--muted)"></div>
+    </div>
+  </div>
+
+<!-- ── EDIT DRIVER MODAL ── -->
+<div class="overlay" id="editDriverOverlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏ Edit Driver</div>
+    <input type="hidden" id="ed-username"/>
+    <div class="row2">
+      <div class="field"><label>Driver Name</label><input type="text" id="ed-name" placeholder="Full name"/></div>
+      <div class="field"><label>Mobile</label><input type="tel" id="ed-mobile" placeholder="+91…"/></div>
+    </div>
+    <div class="field"><label>Email ID</label><input type="email" id="ed-email" placeholder="email@example.com"/></div>
+    <div class="field"><label>Role</label>
+      <select id="ed-role"><option value="user">Driver / User</option><option value="admin">Admin</option></select>
+    </div>
+    <div class="field"><label>New Password <span style="color:var(--muted);font-weight:400;font-size:11px">(leave blank to keep current)</span></label>
+      <input type="password" id="ed-newpwd" placeholder="New password (optional)"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeOverlay('editDriverOverlay')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" id="saveEditDriverBtn" onclick="saveEditDriver()">
+        <span>Save Changes</span>
+      </button>
     </div>
   </div>
 </div>
 
 <!-- ── USER MENU MODAL ── -->
+<!-- ── ENTITY MANAGER MODAL ── -->
+<div class="overlay" id="entityManagerOverlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙ Manage Dropdowns</div>
+    <style>#entityManagerOverlay .modal{box-sizing:border-box;overflow:hidden}</style>
+
+    <!-- Tab switcher -->
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button id="emTab-entity"  onclick="emSwitchTab('entity')"
+              style="flex:1;padding:8px 0;border-radius:8px;border:1px solid rgba(0,212,255,.3);
+                     background:rgba(0,212,255,.15);color:var(--accent);font-family:var(--font);
+                     font-size:12px;font-weight:700;cursor:pointer">🏢 Entity</button>
+      <button id="emTab-account" onclick="emSwitchTab('account')"
+              style="flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--border);
+                     background:transparent;color:var(--muted);font-family:var(--font);
+                     font-size:12px;font-weight:700;cursor:pointer">🏦 Account</button>
+      <button id="emTab-service" onclick="emSwitchTab('service')"
+              style="flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--border);
+                     background:transparent;color:var(--muted);font-family:var(--font);
+                     font-size:12px;font-weight:700;cursor:pointer">🚚 Service</button>
+    </div>
+
+    <!-- List -->
+    <div id="em-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;
+         max-height:260px;overflow-y:auto;overflow-x:hidden;
+         scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+         padding-right:4px"></div>
+    <style>
+      #em-list::-webkit-scrollbar{width:5px}
+      #em-list::-webkit-scrollbar-track{background:transparent}
+      #em-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
+    </style>
+
+    <!-- Add new -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;width:100%;box-sizing:border-box">
+      <input type="text" id="em-input" placeholder="Add new value…"
+             style="flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);
+                    border-radius:8px;padding:10px 13px;color:var(--text);
+                    font-family:var(--font);font-size:14px;outline:none;box-sizing:border-box"
+             onkeydown="if(event.key==='Enter')emAdd()"/>
+      <button class="btn btn-primary" style="flex:0 0 80px;padding:0;font-size:13px" onclick="emAdd()">+ Add</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeOverlay('entityManagerOverlay')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" id="emSaveBtn" onclick="emSave()">
+        <span>💾 Save</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="userOverlay">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -1263,32 +1467,10 @@ body.admin-mode #toast {
       <div style="font-size:12px;color:var(--muted);margin-top:3px" id="menuRole">—</div>
       <div style="font-size:12px;color:var(--muted);margin-top:2px" id="menuEmail">—</div>
     </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:12px"><div><div style="font-size:13px;font-weight:600;color:var(--text)">🎨 Appearance</div><div style="font-size:11px;color:var(--muted);margin-top:2px" id="themeLabel">Dark mode</div></div><button id="themeToggleBtn" onclick="toggleTheme()" style="width:52px;height:28px;border-radius:999px;border:none;cursor:pointer;position:relative;padding:0;flex-shrink:0;background:var(--accent)"><span id="themeToggleKnob" style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform 0.3s;display:flex;align-items:center;justify-content:center;font-size:12px">🌙</span></button></div>
     <button class="btn btn-danger" onclick="doLogout()">🚪 Sign Out</button>
     <div style="height:8px"></div>
     <button class="btn btn-ghost" onclick="closeOverlay('userOverlay')">Cancel</button>
-  </div>
-</div>
-
-<!-- ── PHOTO VIEWER ── -->
-<div id="photoViewer">
-  <!-- Image view -->
-  <div id="photoViewerImgWrap" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%">
-    <div class="pv-info" id="pvLoadingText">⏳ Loading photo…</div>
-    <img id="photoViewerImg" src="" alt="Photo"
-         onload="pvImgLoaded()" onerror="pvImgError()"/>
-    <div class="pv-actions" id="pvActions" style="display:none">
-      <a id="pvOpenLink" href="#" target="_blank" class="pv-btn pv-btn-primary">🔗 Open in Browser</a>
-      <button class="pv-btn pv-btn-ghost" onclick="closePhotoViewer()">✕ Close</button>
-    </div>
-  </div>
-  <!-- Fallback if image fails to load -->
-  <div id="photoViewerFallback">
-    <div style="font-size:48px">📷</div>
-    <p>Photo cannot be displayed directly.<br/>Click below to open it in your browser.</p>
-    <div class="pv-actions">
-      <a id="pvFallbackLink" href="#" target="_blank" class="pv-btn pv-btn-primary">🔗 Open Photo</a>
-      <button class="pv-btn pv-btn-ghost" onclick="closePhotoViewer()">✕ Close</button>
-    </div>
   </div>
 </div>
 
@@ -1365,11 +1547,46 @@ function closeUploadPreview() {
     </div>
   </div>
 </div>
+<!-- ── LOADING OVERLAY ── -->
+<div id="loadingOverlay" style="display:none;position:fixed;inset:0;z-index:9999;
+     background:rgba(6,13,20,0.88);align-items:center;justify-content:center;
+     flex-direction:column;gap:16px;backdrop-filter:blur(4px)">
+  <div style="width:48px;height:48px;border:3px solid rgba(0,212,255,.2);
+       border-top-color:var(--accent);border-radius:50%;animation:rot 0.8s linear infinite"></div>
+  <div id="loadingMsg" style="color:var(--accent);font-size:14px;font-weight:600;
+       letter-spacing:1.5px;text-transform:uppercase;font-family:var(--font)">Please wait…</div>
+</div>
+
 <div id="toast"></div>
+
+<!-- ── PHOTO VIEWER ── -->
+<div id="photoViewer">
+  <!-- Image view -->
+  <div id="photoViewerImgWrap" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%">
+    <div class="pv-info" id="pvLoadingText">⏳ Loading photo…</div>
+    <img id="photoViewerImg" src="" alt="Photo"
+         onload="pvImgLoaded()" onerror="pvImgError()"/>
+    <div class="pv-actions" id="pvActions" style="display:none">
+      <a id="pvOpenLink" href="#" target="_blank" class="pv-btn pv-btn-primary">🔗 Open in Browser</a>
+      <button class="pv-btn pv-btn-ghost" onclick="closePhotoViewer()">✕ Close</button>
+    </div>
+  </div>
+  <!-- Fallback if image fails to load -->
+  <div id="photoViewerFallback">
+    <div style="font-size:48px">📷</div>
+    <p>Photo cannot be displayed directly.<br/>Click below to open it in your browser.</p>
+    <div class="pv-actions">
+      <a id="pvFallbackLink" href="#" target="_blank" class="pv-btn pv-btn-primary">🔗 Open Photo</a>
+      <button class="pv-btn pv-btn-ghost" onclick="closePhotoViewer()">✕ Close</button>
+    </div>
+  </div>
+</div>
+
+
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────────
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3-GEN9GKklZUHKsr2ewhjUfvdgW8-sO7Y9pSikAFzYg0KsZwiSCXHxeZFZt764F6u/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNbO3l6ueM3Y0c-80Saqt6HGQtkg-53XkpodBsl5zfU-GAGxt_oMcea4W4g8Dc59iX/exec";
 
 // ── STATE ──────────────────────────────────────────────────────
 let session      = { username:"", token:"", role:"", driverName:"", email:"" };
@@ -1416,6 +1633,7 @@ async function doLogin() {
   if (!u || !p) { loginErr("Enter username and password"); return; }
   const btn = document.getElementById("loginBtn");
   btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  showLoading("Signing in…");
   document.getElementById("loginErr").classList.remove("show");
   try {
     const res = await api({ action:"login", username:u, password:p });
@@ -1530,6 +1748,8 @@ function enterApp() {
     document.querySelectorAll(".admin-tab").forEach(t => t.classList.add("show"));
     loadDropdowns();
     document.body.classList.add("admin-mode");
+    var emBar = document.getElementById("manageEntitiesBar");
+    if (emBar) emBar.style.display = "block";
     const vp = document.querySelector('meta[name="viewport"]');
     if (vp) vp.setAttribute("content", "width=device-width,initial-scale=1.0");
     startAutoRefresh(30000); // admin polls every 30s
@@ -1651,6 +1871,41 @@ function getPhotoUrl(s) {
 let tableSortCol = "";
 let tableSortDir = 1;
 
+
+function renderCheckInBtn(s) {
+  var checkedIn  = s.CheckInAt  && String(s.CheckInAt).trim()  !== "";
+  var checkedOut = s.CheckOutAt && String(s.CheckOutAt).trim() !== "";
+  var sid = esc(s.ID || "");
+  if (!checkedIn)
+    return "<button class=\"btn-checkin\" onclick=\"doCheckIn('" + sid + "','checkIn',this)\">✅ Check In</button><div class=\"ci-stamp\" id=\"ci_" + sid + "\"></div>";
+  if (checkedIn && !checkedOut)
+    return "<div class=\"ci-stamp\">✅ Checked in: <b>" + esc(s.CheckInAt) + "</b></div><button class=\"btn-checkout\" onclick=\"doCheckIn('" + sid + "','checkOut',this)\">🔴 Check Out</button><div class=\"co-stamp\" id=\"co_" + sid + "\"></div>";
+  return "<div class=\"ci-stamp\">✅ In: <b>" + esc(s.CheckInAt) + "</b></div><div class=\"co-stamp\">🔴 Out: <b>" + esc(s.CheckOutAt) + "</b></div>";
+}
+async function doCheckIn(shipmentId, actionType, btn) {
+  var orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  showLoading("Recording…");
+  try {
+    var res = await api(authPayload({ action:"checkInOut", shipmentId:shipmentId, action_type:actionType }));
+    if (!res.success) throw new Error(res.message);
+    if (actionType === "checkIn") {
+      btn.className = "btn-checkin"; btn.innerHTML = "✅ Checked In"; btn.disabled = true;
+      var el = document.getElementById("ci_" + shipmentId);
+      if (el) el.innerHTML = "✅ Checked in: <b>" + res.timestamp + "</b>";
+    } else {
+      btn.className = "btn-checkout"; btn.innerHTML = "🔴 Checked Out"; btn.disabled = true;
+      var el2 = document.getElementById("co_" + shipmentId);
+      if (el2) el2.innerHTML = "🔴 Checked out: <b>" + res.timestamp + "</b>";
+    }
+    toast("✅ " + (actionType === "checkIn" ? "Check In" : "Check Out") + " recorded!", "ok");
+    setTimeout(loadShipments, 1500);
+  } catch(e) {
+    toast("❌ Failed: " + e.message, "er");
+    btn.innerHTML = orig; btn.disabled = false;
+  }
+}
+
 function renderShipments(ships) {
   // Apply date filter first, then entity + search
   let filtered = applyDateFilter(ships);
@@ -1712,9 +1967,12 @@ function renderShipments(ships) {
           ${s.Date       ?`<span class="chip muted">📅 ${esc(s.Date)}</span>`:""}
           ${s.UpdatedAt  ?`<span class="chip muted">🕐 ${esc(fmtUpdated(s.UpdatedAt))}</span>`:""}
         </div>
+        ${s.PickupLocation?`<div style="margin:4px 0;padding:8px 12px;background:rgba(0,212,255,0.05);border-left:3px solid rgba(0,212,255,0.4);border-radius:0 8px 8px 0;font-size:12px"><span style="color:var(--accent);font-weight:600">📍 Pickup:</span> <span style="color:var(--muted)">${esc(s.PickupLocation)}</span></div>`:""}
+        ${s.Notes?`<div style="margin:4px 0;padding:8px 12px;background:rgba(255,255,255,0.03);border-left:3px solid rgba(255,255,255,0.15);border-radius:0 8px 8px 0;font-size:12px"><span style="color:var(--text);font-weight:600">📝 Notes:</span> <span style="color:var(--muted)">${esc(s.Notes)}</span></div>`:""}
         ${photoBlock}
-        <div class="ship-actions">
-          <button class="sab-status" onclick='openStatus(${JSON.stringify(s)})'>🔄 Update Status</button>
+        <div class="ship-actions" style="flex-direction:column;gap:8px">
+          ${renderCheckInBtn(s)}
+          <button class="sab-status" style="width:100%" onclick='openStatus(${JSON.stringify(s)})'>🔄 Update Status</button>
         </div>
       </div>`;
     }).join("");
@@ -1732,6 +1990,7 @@ function renderShipments(ships) {
   }
 
   const cols = [
+    { key:"_actions",    label:"",        noSort:true },
     { key:"ID",          label:"ID" },
     { key:"Entity",      label:"Entity" },
     { key:"AccountName", label:"Account" },
@@ -1742,8 +2001,9 @@ function renderShipments(ships) {
     { key:"Assigned",    label:"Assigned" },
     { key:"Status",      label:"Status" },
     { key:"UpdatedAt",   label:"Last updated" },
+    { key:"CheckInAt",   label:"Check In" },
+    { key:"CheckOutAt",  label:"Check Out" },
     { key:"_photo",      label:"Photo",   noSort:true },
-    { key:"_actions",    label:"Actions", noSort:true },
   ];
 
   const thHtml = cols.map(c => {
@@ -1766,9 +2026,15 @@ function renderShipments(ships) {
       : `<span style="color:var(--muted);font-size:18px">—</span>`;
     return `
     <tr class="${sc}">
+      <td class="td-actions">
+        <div class="tbl-actions">
+          <button class="tbl-btn tbl-btn-edit" onclick='openEdit(${JSON.stringify(s)})'>✏ Edit</button>
+          <button class="tbl-btn tbl-btn-del"  onclick="delShipment('${esc(s.ID)}',this)">🗑</button>
+        </div>
+      </td>
       <td class="td-id">${esc(s.ID||"—")}</td>
       <td class="td-entity">${esc(s.Entity||"—")}</td>
-      <td class="td-account">${esc(s.AccountName||"—")}</td>
+      <td class="td-account td-white-bold">${esc(s.AccountName||"—")}</td>
       <td>${esc(s.ServiceType||"—")}</td>
       <td>${esc(s.Commodity||"—")}</td>
       <td class="td-num">${esc(s.Boxes||"—")}</td>
@@ -1776,13 +2042,9 @@ function renderShipments(ships) {
       <td class="td-assigned">${s.Assigned?`👤 ${esc(s.Assigned)}`:"—"}</td>
       <td class="td-status"><span class="status-badge ${sb}">${esc(s.Status||"—")}</span></td>
       <td class="td-date td-updated">${fmtUpdated(s.UpdatedAt)}</td>
+      <td class="td-date td-white" style="font-size:12px">${s.CheckInAt  ? esc(s.CheckInAt)  : '<span style="color:var(--muted)">—</span>'}</td>
+      <td class="td-date td-white" style="font-size:12px">${s.CheckOutAt ? esc(s.CheckOutAt) : '<span style="color:var(--muted)">—</span>'}</td>
       <td class="td-photo">${photoCell}</td>
-      <td class="td-actions">
-        <div class="tbl-actions">
-          <button class="tbl-btn tbl-btn-edit" onclick='openEdit(${JSON.stringify(s)})'>✏ Edit</button>
-          <button class="tbl-btn tbl-btn-del"  onclick="delShipment('${esc(s.ID)}',this)">🗑</button>
-        </div>
-      </td>
     </tr>`;
   }).join("");
 
@@ -1790,10 +2052,10 @@ function renderShipments(ships) {
   <div class="admin-table-wrap">
     <table class="admin-table">
       <colgroup>
-        <col class="col-id"/><col class="col-entity"/><col class="col-account"/>
+        <col class="col-actions"/><col class="col-id"/><col class="col-entity"/><col class="col-account"/>
         <col class="col-service"/><col class="col-commodity"/><col class="col-boxes"/>
         <col class="col-date"/><col class="col-assigned"/><col class="col-status"/>
-        <col class="col-updated"/><col class="col-photo"/><col class="col-actions"/>
+        <col class="col-updated"/><col style="width:110px"/><col style="width:110px"/><col class="col-photo"/>
       </colgroup>
       <thead><tr>${thHtml}</tr></thead>
       <tbody>${rowsHtml}</tbody>
@@ -1892,6 +2154,7 @@ async function createShipment() {
   if (!status)           { toast("⚠ Please select a Status","er"); return; }
   const btn = document.getElementById("createBtn");
   btn.innerHTML='<span class="spin"></span>'; btn.disabled=true;
+  showLoading("Creating shipment…");
   try {
     const res = await api(authPayload({
       action:"createShipment",
@@ -1903,6 +2166,8 @@ async function createShipment() {
       Assigned:    document.getElementById("c-assigned").value,
       Date:        document.getElementById("c-date").value,
       Status:      document.getElementById("c-status").value,
+      PickupLocation: (document.getElementById("c-pickup")||{}).value||"",
+      Notes:          (document.getElementById("c-notes")||{}).value||"",
     }));
     if (res.success) {
       toast("✅ Shipment created: "+res.id,"ok");
@@ -1915,6 +2180,8 @@ async function createShipment() {
       document.getElementById("c-commodity").value = "";
       document.getElementById("c-boxes").value    = "";
       document.getElementById("c-date").value     = new Date().toISOString().split("T")[0];
+      var pu = document.getElementById("c-pickup"); if(pu) pu.value="";
+      var nt = document.getElementById("c-notes");  if(nt) nt.value="";
       loadShipments(); showTab("shipments");
     } else throw new Error(res.message);
   } catch(e) { toast("❌ "+e.message,"er"); }
@@ -1934,12 +2201,15 @@ function openEdit(s) {
   if(dateEl){ try{ dateEl.value=s.Date?new Date(s.Date).toISOString().split("T")[0]:""; }catch(e){ dateEl.value=""; } }
   const eSt=document.getElementById("e-Status");
   if(eSt){ eSt.value=s.Status||""; applyStatusColor(eSt); }
+  var ePu=document.getElementById("e-PickupLocation"); if(ePu) ePu.value=s.PickupLocation||"";
+  var eNt=document.getElementById("e-Notes"); if(eNt) eNt.value=s.Notes||"";
   document.getElementById("editOverlay").classList.add("open");
 }
 
 async function saveEdit() {
+  showLoading("Saving changes…");
   const payload = authPayload({ action:"updateShipment" });
-  ["ID","Entity","AccountName","ServiceType","Commodity","Boxes","Date","Assigned","Status"].forEach(f=>{
+  ["ID","Entity","AccountName","ServiceType","Commodity","Boxes","Date","Assigned","Status","PickupLocation","Notes"].forEach(f=>{
     const el=document.getElementById("e-"+f); if(el) payload[f]=el.value.trim();
   });
   try {
@@ -1950,6 +2220,7 @@ async function saveEdit() {
 }
 
 async function delShipment(id, btn) {
+  showLoading("Deleting shipment…");
   if(!confirm("Delete shipment "+id+"?")) return;
   const row = btn.closest(".ship-card") || btn.closest("tr");
   if (row) row.style.opacity = "0.4";
@@ -1971,89 +2242,127 @@ function openStatus(s) {
   sSt.value = s.Status || "";
   applyStatusColor(sSt);
   removePhoto();
-  const upBtn = document.getElementById("uploadPhotoBtn");
-  upBtn.disabled = true; upBtn.style.opacity = ".45"; upBtn.style.cursor = "not-allowed";
-  upBtn.innerHTML = "<span>📷 Upload Photo</span>";
-  upBtn.dataset.shipmentId = s.ID;
-  document.getElementById("uploadPhotoHint").textContent = "Save status first, then upload photo";
+  window._currentShipmentId = s.ID;
   document.getElementById("statusOverlay").classList.add("open");
 }
 
 function closeStatusModal() { closeOverlay("statusOverlay"); removePhoto(); }
 
-function photoSelected(input) {
+// ── PHOTO: choose source, auto-upload on select ───────────────
+function photoChosen(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
-  // No size limit — file goes via google.script.run, not fetch
   const allowed = ["image/jpeg","image/jpg","image/png","image/gif","image/webp",
                    "image/heic","image/heif","image/bmp"];
   if (file.type && !allowed.includes(file.type.toLowerCase())) {
     toast("⚠ Only image files allowed","er"); input.value = ""; return;
   }
-  // Store file reference — no FileReader yet (lazy preview on tap)
+
+  // Store reference and show preview immediately
+  window._selectedPhotoFile = file;
   selectedPhotoBase64 = null;
   selectedPhotoMime   = file.type || "image/jpeg";
-  window._selectedPhotoFile = file;
 
-  document.getElementById("photoPreview").style.display = "block";
-  document.getElementById("photoPreviewImg").style.display = "none";
-  document.getElementById("photoPreviewImg").src = "";
-  const thumb = document.getElementById("photoPreviewThumb");
-  thumb.style.display = "flex";
-  document.getElementById("photoPreviewLabel").textContent =
-    "Tap to preview · " + file.name + " (" + (file.size/1024/1024).toFixed(1) + " MB)";
-  document.querySelector(".photo-upload-area .photo-upload-ico").textContent = "✅";
-  document.querySelector(".photo-upload-area .photo-upload-txt").innerHTML =
-    `<strong>${esc(file.name)}</strong> <span style="color:var(--muted);font-size:11px">(${(file.size/1024/1024).toFixed(1)} MB)</span>`;
-}
+  // Show preview box, hide picker
+  document.getElementById("photoSourcePicker").style.display = "none";
+  const box = document.getElementById("photoPreviewBox");
+  box.style.display = "block";
 
-// Lazy preview — only loads when driver explicitly taps
-function showPhotoPreview() {
-  const file = window._selectedPhotoFile;
-  if (!file) return;
-  document.getElementById("photoPreviewLabel").textContent = "⏳ Loading…";
-  const reader = new FileReader();
+  // Show image preview
+  var reader = new FileReader();
   reader.onload = function(ev) {
-    selectedPhotoBase64 = ev.target.result.split(",")[1];
-    const img = document.getElementById("photoPreviewImg");
-    img.src = ev.target.result;
-    img.style.display = "block";
-    document.getElementById("photoPreviewThumb").style.display = "none";
-  };
-  reader.onerror = () => {
-    document.getElementById("photoPreviewLabel").textContent = "Preview not available for this file type";
+    document.getElementById("photoPreviewImg").src = ev.target.result;
   };
   reader.readAsDataURL(file);
-}
 
-function photoDrag(e, over) {
-  e.preventDefault();
-  document.getElementById("photoDropZone").classList.toggle("drag", over);
-}
-function photoDrop(e) {
-  e.preventDefault();
-  document.getElementById("photoDropZone").classList.remove("drag");
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith("image/")) {
-    const dt = new DataTransfer(); dt.items.add(file);
-    const inp = document.getElementById("photoInput");
-    inp.files = dt.files; photoSelected(inp);
+  // Auto-upload if status already saved (shipmentId available)
+  var sid = window._currentShipmentId || document.getElementById("s-ID").value;
+  if (sid) {
+    autoUploadPhoto(file, sid);
+  } else {
+    // Status not saved yet — show waiting message
+    document.getElementById("photoUploadOverlay").style.display = "none";
+    document.getElementById("photoStatusText").textContent = "📎 Photo ready — save status to upload";
   }
 }
 
+async function autoUploadPhoto(file, shipmentId) {
+  showLoading("Uploading photo…");
+  var overlay   = document.getElementById("photoUploadOverlay");
+  var statusTxt = document.getElementById("photoUploadStatus");
+  var bar       = document.getElementById("photoUploadBar");
+  var statusEl  = document.getElementById("photoStatusText");
+
+  overlay.style.display = "flex";
+  statusTxt.textContent = "⏳ Compressing…";
+  bar.style.width = "15%";
+
+  var b64;
+  try {
+    b64 = await compressImage(file, 1200, 0.75);
+  } catch(e) {
+    overlay.style.display = "none";
+    statusEl.textContent = "❌ Could not process image";
+    toast("❌ Image error: " + e.message, "er");
+    return;
+  }
+
+  statusTxt.textContent = "⏳ Uploading…";
+  bar.style.width = "45%";
+
+  var fileName = shipmentId + "_" + session.username + "_" + Date.now() + ".jpg";
+  try {
+    var res = await api(authPayload({
+      action:"uploadPhoto", base64Data:b64,
+      mimeType:"image/jpeg", fileName:fileName, shipmentId:shipmentId
+    }));
+    if (!res.success) throw new Error(res.message || "Upload failed");
+
+    bar.style.width = "100%";
+    statusTxt.textContent = "✅ Saved!";
+    statusTxt.style.color = "#00ff88";
+    setTimeout(function(){ overlay.style.display = "none"; }, 1000);
+    statusEl.textContent = "✅ Photo saved to Drive";
+    statusEl.style.color = "var(--green)";
+    window._photoUploaded = true;
+    loadShipments();
+    if (res.thumbUrl) showUploadPreview(res.thumbUrl, res.photoUrl, fileName);
+  } catch(e) {
+    bar.style.width = "0%";
+    statusTxt.textContent = "❌ Failed";
+    statusTxt.style.color = "var(--red)";
+    setTimeout(function(){ overlay.style.display = "none"; }, 800);
+    statusEl.textContent = "❌ Upload failed: " + e.message;
+    statusEl.style.color = "var(--red)";
+    toast("❌ Photo upload failed: " + e.message, "er");
+  }
+}
+
+// Keep showPhotoPreview as no-op (no longer used but may be called)
+function showPhotoPreview() {}
+function photoDrag(e, over) { e.preventDefault(); }
+function photoDrop(e) { e.preventDefault(); }
+
 function removePhoto() {
   selectedPhotoBase64 = null; selectedPhotoMime = null;
-  window._selectedPhotoFile = null;
-  document.getElementById("photoInput").value = "";
-  document.getElementById("photoPreview").style.display = "none";
-  document.getElementById("photoPreviewImg").src = "";
-  document.getElementById("photoPreviewImg").style.display = "none";
-  document.getElementById("photoPreviewThumb").style.display = "none";
-  document.querySelector(".photo-upload-area .photo-upload-ico").textContent = "📸";
-  document.querySelector(".photo-upload-area .photo-upload-txt").innerHTML =
-    `Tap to take photo or <strong>choose from gallery</strong>`;
-  document.getElementById("uploadProgress").style.display = "none";
-  document.getElementById("uploadProgressBar").style.width = "0%";
+  window._selectedPhotoFile = null; window._photoUploaded = false;
+  var c = document.getElementById("photoInputCamera");
+  var g = document.getElementById("photoInputGallery");
+  if (c) c.value = ""; if (g) g.value = "";
+  var box = document.getElementById("photoPreviewBox");
+  if (box) box.style.display = "none";
+  var picker = document.getElementById("photoSourcePicker");
+  if (picker) picker.style.display = "flex";
+  var st = document.getElementById("photoStatusText");
+  if (st) { st.textContent = ""; st.style.color = ""; }
+  var bar = document.getElementById("photoUploadBar");
+  if (bar) bar.style.width = "0%";
+  var overlay = document.getElementById("photoUploadOverlay");
+  if (overlay) { overlay.style.display = "flex"; }
+  var statusTxt = document.getElementById("photoUploadStatus");
+  if (statusTxt) { statusTxt.textContent = "⏳ Uploading…"; statusTxt.style.color = "#00d4ff"; }
+  var pi = document.getElementById("photoPreviewImg");
+  if (pi) { pi.src = ""; pi.style.display = "none"; }
 }
 
 async function saveStatus() {
@@ -2062,68 +2371,50 @@ async function saveStatus() {
   if (!status) { toast("⚠ Please select a status", "er"); return; }
   const btn = document.getElementById("saveStatusBtn");
   btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  showLoading("Updating status…");
   try {
     const res = await api(authPayload({ action:"updateShipment", ID:id, Status:status }));
     if (!res.success) throw new Error(res.message);
     toast("✅ Status saved: " + status, "ok");
     loadShipments();
-    const upBtn = document.getElementById("uploadPhotoBtn");
-    upBtn.disabled = false; upBtn.style.opacity = "1"; upBtn.style.cursor = "pointer";
-    upBtn.dataset.shipmentId = id;
-    document.getElementById("uploadPhotoHint").textContent =
-      window._selectedPhotoFile ? "Photo ready — tap Upload Photo" : "Select a photo, then tap Upload Photo";
+    window._currentShipmentId = id;
+    if (window._selectedPhotoFile && !window._photoUploaded) {
+      autoUploadPhoto(window._selectedPhotoFile, id);
+    }
+    var st = document.getElementById("photoStatusText");
+    if (st && !window._selectedPhotoFile) st.textContent = "";
   } catch(e) { toast("❌ " + e.message, "er"); }
   btn.innerHTML = "<span>✔ Update Status</span>"; btn.disabled = false;
 }
 
+function compressImage(file, maxPx, quality) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onerror = function() { reject(new Error("Could not read file")); };
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onerror = function() { reject(new Error("Could not decode image")); };
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxPx) { h = Math.round(h * maxPx / w); w = maxPx; }
+        if (h > maxPx) { w = Math.round(w * maxPx / h); h = maxPx; }
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality).split(",")[1]);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadPhotoOnly() {
-  const file = window._selectedPhotoFile;
+  var file = window._selectedPhotoFile;
   if (!file) { toast("⚠ Select a photo first", "er"); return; }
-  const btn = document.getElementById("uploadPhotoBtn");
-  const id  = btn.dataset.shipmentId || document.getElementById("s-ID").value;
-  if (!id)  { toast("⚠ Save status first", "er"); return; }
-
-  btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
-  document.getElementById("uploadProgress").style.display = "block";
-  const pBar = document.getElementById("uploadProgressBar");
-  pBar.style.width = "10%";
-
-  let b64;
-  try {
-    b64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = ev => resolve(ev.target.result.split(",")[1]);
-      reader.onerror = () => reject(new Error("Could not read file"));
-      reader.readAsDataURL(file);
-    });
-  } catch(e) {
-    document.getElementById("uploadProgress").style.display = "none";
-    toast("❌ Could not read file: " + e.message, "er");
-    btn.innerHTML = "<span>📷 Upload Photo</span>"; btn.disabled = false; btn.style.opacity = "1";
-    return;
-  }
-
-  pBar.style.width = "40%";
-  const fileName = id + "_" + session.username + "_" + Date.now() + ".jpg";
-
-  try {
-    const res = await api(authPayload({
-      action:"uploadPhoto", base64Data:b64,
-      mimeType:file.type||"image/jpeg", fileName:fileName, shipmentId:id
-    }));
-    if (!res.success) throw new Error(res.message||"Upload failed");
-    pBar.style.width = "100%";
-    setTimeout(function(){ document.getElementById("uploadProgress").style.display="none"; }, 500);
-    toast("✅ Photo uploaded! 📷", "ok");
-    btn.innerHTML = "✅ Photo Saved"; btn.disabled = true;
-    document.getElementById("uploadPhotoHint").textContent = "Photo saved to Drive ✓";
-    loadShipments();
-    if (res.thumbUrl) showUploadPreview(res.thumbUrl, res.photoUrl, fileName);
-  } catch(e) {
-    document.getElementById("uploadProgress").style.display = "none";
-    toast("❌ Upload failed: " + e.message, "er");
-    btn.innerHTML = "<span>📷 Retry Upload</span>"; btn.disabled = false; btn.style.opacity = "1";
-  }
+  var id = window._currentShipmentId || document.getElementById("s-ID").value;
+  if (!id) { toast("⚠ Save status first", "er"); return; }
+  await autoUploadPhoto(file, id);
 }
 
 // ── PHOTO VIEWER ──────────────────────────────────────────────
@@ -2165,9 +2456,12 @@ function renderDrivers(users) {
           ${u.lastLogin?` · Last: ${esc(u.lastLogin)}`:""}
         </div>
       </div>
-      ${u.username!==session.username
-        ?`<button class="urow-del" onclick="removeDriver('${esc(u.username)}')">Remove</button>`
-        :`<span style="font-size:11px;color:var(--accent)">You</span>`}
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <button class="tbl-btn tbl-btn-edit" onclick='openEditDriver(${JSON.stringify(u).replace(/"/g,"&quot;")})'>✏ Edit</button>
+        ${u.username!==session.username
+          ?`<button class="urow-del" onclick="removeDriver('${esc(u.username)}')">Remove</button>`
+          :`<span style="font-size:11px;color:var(--accent)">You</span>`}
+      </div>
     </div>`).join("");
 }
 
@@ -2178,6 +2472,7 @@ async function addDriver() {
   if(password.length<6){ toast("⚠ Password min 6 characters","er"); return; }
   const btn=document.getElementById("addUserBtn");
   btn.innerHTML='<span class="spin"></span>'; btn.disabled=true;
+  showLoading("Adding driver…");
   try {
     const res = await api(authPayload({
       action:"addUser", newUsername:newUser, password,
@@ -2196,6 +2491,7 @@ async function addDriver() {
 }
 
 async function removeDriver(uname) {
+  showLoading("Removing driver…");
   if(!confirm("Remove driver '"+uname+"'?")) return;
   try {
     const res = await api(authPayload({ action:"deleteUser", targetUser:uname }));
@@ -2204,7 +2500,251 @@ async function removeDriver(uname) {
   } catch(e){ toast("❌ "+e.message,"er"); }
 }
 
-// ── USER MENU ──────────────────────────────────────────────────
+function openEditDriver(u) {
+  document.getElementById("ed-username").value   = u.username   || "";
+  document.getElementById("ed-name").value       = u.driverName || "";
+  document.getElementById("ed-mobile").value     = u.mobile     || "";
+  document.getElementById("ed-email").value      = u.email      || "";
+  document.getElementById("ed-role").value       = u.role       || "user";
+  document.getElementById("ed-newpwd").value     = "";
+  document.getElementById("editDriverOverlay").classList.add("open");
+}
+async function saveEditDriver() {
+  const uname = document.getElementById("ed-username").value;
+  const btn   = document.getElementById("saveEditDriverBtn");
+  btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  showLoading("Saving driver…");
+  try {
+    // Update user details via addUser (overwrite) — first delete then re-add with new info
+    const newPwd = document.getElementById("ed-newpwd").value.trim();
+    const payload = {
+      action:"addUser",
+      newUsername: uname,
+      password:    newPwd || "KEEP_EXISTING_" + Date.now(), // placeholder if no pwd change
+      driverName:  document.getElementById("ed-name").value.trim(),
+      email:       document.getElementById("ed-email").value.trim(),
+      mobile:      document.getElementById("ed-mobile").value.trim(),
+      role:        document.getElementById("ed-role").value,
+    };
+    // If no new password, use updateDriver action
+    const res = await api(authPayload(newPwd
+      ? payload
+      : { action:"updateDriver",
+          username:    uname,
+          driverName:  document.getElementById("ed-name").value.trim(),
+          email:       document.getElementById("ed-email").value.trim(),
+          mobile:      document.getElementById("ed-mobile").value.trim(),
+          role:        document.getElementById("ed-role").value }
+    ));
+    if (res.success) {
+      toast("✅ Driver updated", "ok");
+      closeOverlay("editDriverOverlay");
+      loadUsers();
+    } else throw new Error(res.message);
+  } catch(e) { toast("❌ " + e.message, "er"); }
+  finally { btn.innerHTML = "<span>Save Changes</span>"; btn.disabled = false; }
+}
+
+// ── CONFIG MANAGEMENT ─────────────────────────────────────────
+var _cfg = { entity:[], account:[], service:[], status:[] };
+
+async function loadConfig() {
+  try {
+    const res = await api(authPayload({ action:"getDropdowns" }));
+    if (!res.success) throw new Error(res.message);
+    _cfg.entity  = res.entities    ? [...res.entities]    : [];
+    _cfg.account = res.accountNames? [...res.accountNames]: [];
+    _cfg.service = res.serviceTypes? [...res.serviceTypes]: [];
+    _cfg.status  = _cfg.status.length ? _cfg.status :
+      ["Serviced","Complete","Pending","In-Progress","Issue","Missed Service"];
+    cfgRender();
+  } catch(e) { toast("❌ Failed to load config: " + e.message, "er"); }
+}
+
+function cfgRender() {
+  var map = { entity:"cfg-entity-list", account:"cfg-account-list",
+              service:"cfg-service-list", status:"cfg-status-list" };
+  Object.keys(map).forEach(function(key) {
+    var el = document.getElementById(map[key]);
+    if (!el) return;
+    el.innerHTML = _cfg[key].map(function(val, i) {
+      var k=key; var d=document.createElement("div");
+      d.style.cssText="display:flex;align-items:center;gap:5px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:4px 10px 4px 12px;font-size:12px";
+      d.innerHTML='<span contenteditable="true" data-key="'+k+'" data-idx="'+i+'" style="outline:none;color:var(--text);min-width:20px" onblur="cfgUpdate(this.dataset.key,+this.dataset.idx,this.textContent.trim())">'+esc(val)+'</span>'+'<button data-key="'+k+'" data-idx="'+i+'" onclick="cfgRemove(this.dataset.key,+this.dataset.idx)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>';
+      return d.outerHTML;
+    }).join("");
+  });
+}
+
+function cfgUpdate(k,i,v){if(_cfg[k])_cfg[k][i]=v;}
+function cfgAdd(key) {
+  var inputId = "cfg-" + key + "-input";
+  var el = document.getElementById(inputId);
+  var val = el ? el.value.trim() : "";
+  if (!val) { toast("⚠ Enter a value first", "er"); return; }
+  if (_cfg[key].includes(val)) { toast("⚠ Already exists", "er"); return; }
+  _cfg[key].push(val);
+  el.value = "";
+  cfgRender();
+}
+
+function cfgRemove(key, idx) {
+  _cfg[key].splice(idx, 1);
+  cfgRender();
+}
+
+async function cfgSave() {
+  var btn = document.querySelector("#screen-config .btn-primary:last-of-type");
+  var statusEl = document.getElementById("cfgSaveStatus");
+  if (btn) { btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  showLoading("Saving config…"); }
+  try {
+    const res = await api(authPayload({
+      action: "saveConfig",
+      entities:     _cfg.entity,
+      accountNames: _cfg.account,
+      serviceTypes: _cfg.service,
+      statusValues: _cfg.status,
+    }));
+    if (res.success) {
+      toast("✅ Config saved!", "ok");
+      if (statusEl) statusEl.textContent = "✅ Saved at " + new Date().toLocaleTimeString();
+      loadDropdowns(); // refresh form dropdowns
+    } else throw new Error(res.message);
+  } catch(e) {
+    toast("❌ " + e.message, "er");
+    if (statusEl) statusEl.textContent = "❌ " + e.message;
+  } finally {
+    if (btn) { btn.innerHTML = "<span>💾 Save All Changes</span>"; btn.disabled = false; }
+  }
+}
+
+// ── DROPDOWN MANAGER (Entity / Account / Service) ─────────────
+var _emList    = [];
+var _emTab     = "entity"; // current tab
+var _emIcon    = { entity:"🏢", account:"🏦", service:"🚚" };
+var _emLabel   = { entity:"entity name", account:"account name", service:"service type" };
+
+function openEntityManager() {
+  _emTab = "entity";
+  // Always fetch fresh so all three tabs are populated
+  api(authPayload({ action:"getDropdowns" })).then(function(res) {
+    _cfg.entity  = res.entities     ? [...res.entities]    : [];
+    _cfg.account = res.accountNames ? [...res.accountNames]: [];
+    _cfg.service = res.serviceTypes ? [...res.serviceTypes]: [];
+    _emList = [..._cfg.entity];
+    emRefresh();
+    document.getElementById("entityManagerOverlay").classList.add("open");
+  }).catch(function(e) { toast("❌ " + e.message, "er"); });
+}
+
+function emSwitchTab(tab) {
+  if (_emTab === tab) return; // already on this tab
+  // _emList is already kept in sync via onchange on each input
+  // Just save it to _cfg for the current tab before switching
+  _cfg[_emTab] = [..._emList];
+  _emTab = tab;
+  _emList = Array.isArray(_cfg[tab]) ? [..._cfg[tab]] : [];
+  emRefresh();
+}
+
+function emRefresh() {
+  // Update tab button styles
+  ["entity","account","service"].forEach(function(t) {
+    var btn = document.getElementById("emTab-" + t);
+    if (!btn) return;
+    var active = t === _emTab;
+    btn.style.background = active ? "rgba(0,212,255,.15)" : "transparent";
+    btn.style.color      = active ? "var(--accent)"       : "var(--muted)";
+    btn.style.border     = active ? "1px solid rgba(0,212,255,.3)" : "1px solid var(--border)";
+  });
+  var inp = document.getElementById("em-input");
+  if (inp) inp.placeholder = "Add new " + (_emLabel[_emTab] || "value") + "…";
+  emRender();
+}
+
+function emRender() {
+  var el = document.getElementById("em-list");
+  if (!el) return;
+  if (_emList.length === 0) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">No values yet — add one below</div>';
+    return;
+  }
+  var icon = _emIcon[_emTab] || "•";
+  el.innerHTML = _emList.map(function(val, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;' +
+           'background:var(--surface);border:1px solid var(--border);border-radius:10px">' +
+           '<span style="font-size:15px">' + icon + '</span>' +
+           '<input type="text" value="' + esc(val) + '" data-idx="' + i + '" ' +
+           'style="flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);' +
+           'color:var(--text);font-family:var(--font);font-size:14px;font-weight:600;padding:2px 4px;outline:none" ' +
+           'oninput="_emList[' + i + ']=this.value" onchange="_emList[' + i + ']=this.value.trim()" ' +
+           'onfocus="this.style.borderBottomColor=\"var(--accent)\"" ' +
+           'onblur="this.style.borderBottomColor=\"var(--border)\";_emList[' + i + ']=this.value.trim()"/> ' +
+           '<button onclick="emRemove(' + i + ')" ' +
+           'style="background:rgba(255,71,87,0.12);border:1px solid rgba(255,71,87,0.25);' +
+           'color:var(--red);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;flex-shrink:0">✕</button>' +
+           '</div>';
+  }).join("");
+}
+
+function emCollect() {
+  var inputs = document.querySelectorAll("#em-list input[type='text']");
+  inputs.forEach(function(inp) {
+    var i = parseInt(inp.dataset.idx);
+    if (!isNaN(i)) _emList[i] = inp.value.trim();
+  });
+  _emList = _emList.filter(function(v) { return v && v.trim(); });
+}
+
+function emAdd() {
+  var inp = document.getElementById("em-input");
+  var val = inp ? inp.value.trim() : "";
+  if (!val) { toast("⚠ Enter a value", "er"); return; }
+  if (_emList.indexOf(val) > -1) { toast("⚠ Already exists", "er"); return; }
+  _emList.push(val);
+  if (inp) inp.value = "";
+  emRender();
+  var el = document.getElementById("em-list");
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+function emRemove(idx) {
+  _emList.splice(idx, 1);
+  emRender();
+}
+
+async function emSave() {
+  // Collect current tab inputs
+  emCollect();
+  _cfg[_emTab] = [..._emList];
+
+  var btn = document.getElementById("emSaveBtn");
+  btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  showLoading("Saving dropdowns…");
+  try {
+    var res = await api(authPayload({
+      action:       "saveConfig",
+      entities:     _cfg.entity  || [],
+      accountNames: _cfg.account || [],
+      serviceTypes: _cfg.service || [],
+      statusValues: _cfg.status  || [],
+    }));
+    if (!res.success) throw new Error(res.message);
+    toast("✅ Saved!", "ok");
+    closeOverlay("entityManagerOverlay");
+    loadDropdowns();
+  } catch(e) {
+    toast("❌ " + e.message, "er");
+  } finally {
+    btn.innerHTML = "<span>💾 Save</span>"; btn.disabled = false;
+  }
+}
+
+// ── USER MENU// ── USER MENU ──────────────────────────────────────────────────
+function applyTheme(t){document.documentElement.setAttribute("data-theme",t);var d=t==="dark";var l=document.getElementById("themeLabel");var k=document.getElementById("themeToggleKnob");var b=document.getElementById("themeToggleBtn");if(l)l.textContent=d?"Dark mode":"Light mode";if(k){k.textContent=d?"🌙":"☀️";k.style.transform=d?"translateX(0)":"translateX(24px)";}if(b)b.style.background=d?"var(--accent)":"#f5a623";localStorage.setItem("lt_theme",t);}
+function toggleTheme(){var cur=document.documentElement.getAttribute("data-theme")||"dark";applyTheme(cur==="dark"?"light":"dark");}
+(function(){var s=localStorage.getItem("lt_theme")||"dark";document.documentElement.setAttribute("data-theme",s);})();
 function showUserMenu() {
   document.getElementById("menuName").textContent  = session.driverName||session.username;
   document.getElementById("menuRole").textContent  = session.role==="admin"?"🔑 Administrator":"🚚 Driver";
@@ -2225,6 +2765,17 @@ function toast(msg,type="ok"){
 }
 
 // [FIX: robust api()] Handles network errors, non-JSON responses, and expired sessions
+function showLoading(msg) {
+  var el = document.getElementById("loadingOverlay");
+  var ml = document.getElementById("loadingMsg");
+  if (ml) ml.textContent = msg || "Please wait…";
+  if (el) el.style.display = "flex";
+}
+function hideLoading() {
+  var el = document.getElementById("loadingOverlay");
+  if (el) el.style.display = "none";
+}
+
 async function api(payload) {
   try {
     // No Content-Type header — triggers CORS preflight that Apps Script cannot handle
@@ -2252,6 +2803,8 @@ async function api(payload) {
     if (netErr.message === "Session expired") throw netErr;
     console.error("Network error:", netErr);
     return { success:false, message:"No connection. Check your internet." };
+  } finally {
+    hideLoading();
   }
 }
 
@@ -2374,6 +2927,7 @@ async function arcConfirmMove() {
 
   const btn = document.getElementById("arcMoveBtn");
   btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  showLoading("Archiving…");
 
   const logEl = document.getElementById("arcLog");
   const logContent = document.getElementById("arcLogContent");
@@ -2543,6 +3097,7 @@ async function bulkUpload() {
   if (!bulkRows.length) { toast("⚠ No rows to upload","er"); return; }
   const btn = document.getElementById("bulkUploadBtn");
   btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  showLoading("Uploading…");
 
   const logEl = document.getElementById("bulkLog");
   logEl.style.display = "block";
@@ -2626,6 +3181,7 @@ function historyClear() {
 }
 
 async function historySearch() {
+  showLoading("Searching…");
   const from   = document.getElementById("h-from").value;
   const to     = document.getElementById("h-to").value;
   const entity = document.getElementById("h-entity").value;
